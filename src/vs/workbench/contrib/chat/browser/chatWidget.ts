@@ -23,6 +23,7 @@ import { isDefined } from '../../../../base/common/types.js';
 import { URI } from '../../../../base/common/uri.js';
 import { ICodeEditor } from '../../../../editor/browser/editorBrowser.js';
 import { ICodeEditorService } from '../../../../editor/browser/services/codeEditorService.js';
+import { isLocation } from '../../../../editor/common/languages.js';
 import { localize } from '../../../../nls.js';
 import { MenuId } from '../../../../platform/actions/common/actions.js';
 import { ICommandService } from '../../../../platform/commands/common/commands.js';
@@ -1199,6 +1200,26 @@ export class ChatWidget extends Disposable implements IChatWidget {
 					input = `Follow the prompt instructions from ${promptFileVariables.map(v => v.name).join(', ')}\n${input}`;
 				}
 			}
+
+			const automaticInstructions = await this.promptsService.findInstructionFilesFor(
+				attachedContext.map((variable) => {
+					const { value } = variable;
+
+					if (URI.isUri(value)) {
+						return value;
+					}
+
+					if (isLocation(value)) {
+						return value.uri;
+					}
+
+					return undefined;
+				}).filter(isDefined),
+			);
+
+			attachedContext.push(...automaticInstructions.map((uri) => {
+				return toChatVariable({ uri, isPromptFile: true }, true);
+			}));
 
 			if (this.viewOptions.enableWorkingSet !== undefined && this.input.currentMode === ChatMode.Edit && !this.chatService.edits2Enabled) {
 				const uniqueWorkingSetEntries = new ResourceSet(); // NOTE: this is used for bookkeeping so the UI can avoid rendering references in the UI that are already shown in the working set
