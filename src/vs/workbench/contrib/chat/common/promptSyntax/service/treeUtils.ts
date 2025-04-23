@@ -84,12 +84,13 @@ type TRestParameters<T extends (...args: any[]) => any> =
 	T extends (first: any, ...rest: infer R) => any ? R : never;
 
 /**
- * TODO: @legomushroom
+ * Type for a curried function.
+ * See {@link curry} for more info.
  */
 type TCurriedFunction<T extends (...args: any[]) => any> = ((...args: TRestParameters<T>) => ReturnType<T>);
 
 /**
- * TODO: @legomushroom
+ * Curry a provided function with the first argument.
  */
 // TODO: @legomushroom - unit test/remove?
 export const curry = <T, K>(
