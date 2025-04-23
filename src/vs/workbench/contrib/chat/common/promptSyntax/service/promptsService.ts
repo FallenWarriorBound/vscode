@@ -234,7 +234,6 @@ export class PromptsService extends Disposable implements IPromptsService {
 	 *   - `Agent`, `Ask`, `Edit` -> `Agent`
 	 */
 	// TODO: @legomushroom - update the description
-	// TODO: @legomushroom - add unit tests
 	public async getCombinedToolsMetadata(
 		files: readonly URI[],
 	): Promise<TCombinedToolsMetadata | null> {
@@ -255,7 +254,7 @@ export class PromptsService extends Disposable implements IPromptsService {
 				// TODO: @legomushroom
 				let chatMode: ChatMode = leastPrivilegedChatMode();
 
-				forEach(fileMetadata, (node) => {
+				forEach((node) => {
 					const { metadata } = node;
 					const { mode, tools } = metadata;
 
@@ -280,7 +279,7 @@ export class PromptsService extends Disposable implements IPromptsService {
 					}
 
 					return false;
-				});
+				}, fileMetadata);
 
 				if (chatMode === ChatMode.Agent) {
 					return {
@@ -361,10 +360,10 @@ const morePrivilegedChatMode = (
  * TODO: @legomushroom
  */
 const collectMetadata = (
-	reference: Pick<IPromptFileReference, 'uri' | 'metadata' | 'allValidReferences'>,
+	reference: Pick<IPromptFileReference, 'uri' | 'metadata' | 'references'>,
 ): IMetadata => {
 	const childMetadata = [];
-	for (const child of reference.allValidReferences) {
+	for (const child of reference.references) {
 		if (child.errorCondition !== undefined) {
 			continue;
 		}
