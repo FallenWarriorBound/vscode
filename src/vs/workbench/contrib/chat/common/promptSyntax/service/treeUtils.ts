@@ -11,6 +11,7 @@ export type TTree<TTreenNode> = { children?: readonly TTree<TTreenNode>[] } & TT
 /**
  * TODO: @legomushroom
  */
+// TODO: @legomushroom - unit test?
 export const flatten = <TTreeNode>(
 	node: TTree<TTreeNode>,
 ): Omit<TTreeNode, 'children'>[] => {
@@ -28,6 +29,7 @@ export const flatten = <TTreeNode>(
 /**
  * TODO: @legomushroom
  */
+// TODO: @legomushroom - unit test?
 export const forEach = <TTreeNode>(
 	callback: (node: TTreeNode) => boolean,
 	node: TTree<TTreeNode>,
@@ -52,6 +54,7 @@ export const forEach = <TTreeNode>(
 /**
  * TODO: @legomushroom
  */
+// TODO: @legomushroom - unit test/remove?
 export const map = <TTreeNode, TNewTreeNode>(
 	callback: (node: TTreeNode) => TNewTreeNode,
 	node: TTree<TTreeNode>,
@@ -88,6 +91,7 @@ type TCurriedFunction<T extends (...args: any[]) => any> = ((...args: TRestParam
 /**
  * TODO: @legomushroom
  */
+// TODO: @legomushroom - unit test/remove?
 export const curry = <T, K>(
 	callback: (arg1: T, ...args: any[]) => K,
 	arg1: T,
