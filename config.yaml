@@ -1,0 +1,9 @@
+modian:
+  api_key: "YOUR_MODIAN_KEY"
+  base_url: "https://mdian.ir/api/v1"
+ttms:
+  api_key: "YOUR_TTMS_KEY"
+  api_secret: "YOUR_TTMS_SECRET"
+  base_url: "https://ttms.ir/api/v1"
+database:
+  url: "postgresql://user:pass@localhost:5432/invoices"
