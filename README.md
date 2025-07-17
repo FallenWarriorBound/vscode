@@ -57,6 +57,10 @@ Many of the core components and extensions to VS Code live in their own reposito
 
 VS Code includes a set of built-in extensions located in the [extensions](extensions) folder, including grammars and snippets for many languages. Extensions that provide rich language support (code completion, Go to Definition) for a language have the suffix `language-features`. For example, the `json` extension provides coloring for `JSON` and the `json-language-features` extension provides rich language support for `JSON`.
 
+## Backend API
+
+A simple FastAPI backend lives in `backend/main.py`. Install dependencies with `pip install -r requirements.txt`.
+Set `SECRET_TOKEN` in a `.env` file and run the server with `uvicorn backend.main:app`. Requests to `/secure` require a `Bearer` token.
 ## Development Container
 
 This repository includes a Visual Studio Code Dev Containers / GitHub Codespaces development container.
