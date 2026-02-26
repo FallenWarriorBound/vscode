@@ -8,6 +8,7 @@ import UserDashboard from './pages/UserDashboard';
 import AdminPanel from './pages/AdminPanel';
 import LegalPage from './pages/LegalPage';
 import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -18,7 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/" element={<MainLayout />}>
             <Route index element={<RegisterFlow />} />
             <Route path="login" element={<LoginPage />} />
-            <Route path="dashboard" element={<UserDashboard />} />
+            <Route path="dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
             <Route path="admin" element={<AdminPanel />} />
             <Route path="terms" element={<LegalPage />} />
             <Route path="privacy" element={<LegalPage />} />

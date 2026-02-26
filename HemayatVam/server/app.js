@@ -10,6 +10,7 @@ import investmentRoutes from './routes/investment.routes.js';
 import loanRoutes from './routes/loan.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 app.use(helmet());
@@ -25,6 +26,7 @@ app.use('/api/investment', investmentRoutes);
 app.use('/api/loan', loanRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/user', userRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 

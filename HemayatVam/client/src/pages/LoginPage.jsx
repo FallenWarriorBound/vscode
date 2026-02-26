@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
+  const { setToken, setUser } = useAuth();
   const [form, setForm] = useState({ phone: '', password: '', deviceType: 'desktop', deviceId: 'web-browser' });
   const [message, setMessage] = useState('');
 
@@ -9,8 +11,9 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const { data } = await api.post('/auth/login', form);
-      localStorage.setItem('token', data.accessToken);
+      setToken(data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
+      setUser(data.user || null);
       setMessage('ورود موفق بود. اکنون داشبورد داده واقعی نمایش می‌دهد.');
     } catch {
       setMessage('ورود ناموفق بود. اطلاعات را بررسی کنید.');
