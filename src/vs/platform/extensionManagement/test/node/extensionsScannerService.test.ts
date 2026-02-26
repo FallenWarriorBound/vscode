@@ -22,6 +22,8 @@ import { IProductService } from '../../../product/common/productService.js';
 import { IUriIdentityService } from '../../../uriIdentity/common/uriIdentity.js';
 import { UriIdentityService } from '../../../uriIdentity/common/uriIdentityService.js';
 import { IUserDataProfilesService, UserDataProfilesService } from '../../../userDataProfile/common/userDataProfile.js';
+import * as sinon from 'sinon';
+import * as signatureVerifier from '../../node/digitalSignatureVerifier.js';
 
 let translations: Translations = Object.create(null);
 const ROOT = URI.file('/ROOT');
@@ -54,12 +56,14 @@ class ExtensionsScannerService extends AbstractExtensionsScannerService implemen
 
 suite('NativeExtensionsScanerService Test', () => {
 
-	const disposables = ensureNoDisposablesAreLeakedInTestSuite();
-	let instantiationService: TestInstantiationService;
+        const disposables = ensureNoDisposablesAreLeakedInTestSuite();
+        let instantiationService: TestInstantiationService;
 
-	setup(async () => {
-		translations = {};
-		instantiationService = disposables.add(new TestInstantiationService());
+       suiteTeardown(() => sinon.restore());
+
+        setup(async () => {
+                translations = {};
+                instantiationService = disposables.add(new TestInstantiationService());
 		const logService = new NullLogService();
 		const fileService = disposables.add(new FileService(logService));
 		const fileSystemProvider = disposables.add(new InMemoryFileSystemProvider());
@@ -80,10 +84,14 @@ suite('NativeExtensionsScanerService Test', () => {
 		instantiationService.stub(IUriIdentityService, uriIdentityService);
 		const userDataProfilesService = disposables.add(new UserDataProfilesService(environmentService, fileService, uriIdentityService, logService));
 		instantiationService.stub(IUserDataProfilesService, userDataProfilesService);
-		instantiationService.stub(IExtensionsProfileScannerService, disposables.add(new ExtensionsProfileScannerService(environmentService, fileService, userDataProfilesService, uriIdentityService, logService)));
-		await fileService.createFolder(systemExtensionsLocation);
-		await fileService.createFolder(userExtensionsLocation);
-	});
+                instantiationService.stub(IExtensionsProfileScannerService, disposables.add(new ExtensionsProfileScannerService(environmentService, fileService, userDataProfilesService, uriIdentityService, logService)));
+                await fileService.createFolder(systemExtensionsLocation);
+                await fileService.createFolder(userExtensionsLocation);
+               sinon.stub(signatureVerifier, 'verifyExtensionSignature').callsFake(location => {
+                       const sig = fileService.readFile(joinPath(location, 'package.json.sig')).then(data => data.value.toString()).catch(() => '');
+                       return sig.then(value => value === 'valid');
+               });
+        });
 
 	test('scan system extension', async () => {
 		const manifest: Partial<IExtensionManifest> = anExtensionManifest({ 'name': 'name', 'publisher': 'pub' });
@@ -298,14 +306,14 @@ suite('NativeExtensionsScanerService Test', () => {
 		assert.deepStrictEqual(actual!.manifest.displayName, 'Hello World');
 	});
 
-	test('scan single extension with manifest metadata retains manifest metadata', async () => {
-		const manifest: Partial<IExtensionManifest> = anExtensionManifest({ 'name': 'name', 'publisher': 'pub' });
-		const expectedMetadata = { size: 12345, installedTimestamp: 1234567890, targetPlatform: TargetPlatform.DARWIN_ARM64 };
-		const extensionLocation = await aUserExtension({
-			...manifest,
-			__metadata: expectedMetadata
-		});
-		const testObject: IExtensionsScannerService = disposables.add(instantiationService.createInstance(ExtensionsScannerService));
+        test('scan single extension with manifest metadata retains manifest metadata', async () => {
+                const manifest: Partial<IExtensionManifest> = anExtensionManifest({ 'name': 'name', 'publisher': 'pub' });
+                const expectedMetadata = { size: 12345, installedTimestamp: 1234567890, targetPlatform: TargetPlatform.DARWIN_ARM64 };
+                const extensionLocation = await aUserExtension({
+                        ...manifest,
+                        __metadata: expectedMetadata
+                });
+                const testObject: IExtensionsScannerService = disposables.add(instantiationService.createInstance(ExtensionsScannerService));
 
 		const actual = await testObject.scanExistingExtension(extensionLocation, ExtensionType.User, {});
 
@@ -317,13 +325,40 @@ suite('NativeExtensionsScanerService Test', () => {
 		assert.deepStrictEqual(actual!.isValid, true);
 		assert.deepStrictEqual(actual!.validations, []);
 		assert.deepStrictEqual(actual!.metadata, expectedMetadata);
-		assert.deepStrictEqual(actual!.manifest, manifest);
-	});
+                assert.deepStrictEqual(actual!.manifest, manifest);
+        });
 
-	async function aUserExtension(manifest: Partial<IScannedExtensionManifest>): Promise<URI> {
-		const environmentService = instantiationService.get(INativeEnvironmentService);
-		return anExtension(manifest, URI.file(environmentService.extensionsPath));
-	}
+       test('scan user extension fails when digital signature invalid', async () => {
+               const extensionLocation = await aSignedUserExtension(anExtensionManifest({ 'name': 'sig', 'publisher': 'pub' }), false);
+               const testObject: IExtensionsScannerService = disposables.add(instantiationService.createInstance(ExtensionsScannerService));
+
+               const actual = await testObject.scanExistingExtension(extensionLocation, ExtensionType.User, {});
+
+               assert.ok(actual !== null);
+               assert.strictEqual(actual!.isValid, false);
+       });
+
+       test('scan user extension succeeds when digital signature valid', async () => {
+               const extensionLocation = await aSignedUserExtension(anExtensionManifest({ 'name': 'sigok', 'publisher': 'pub' }), true);
+               const testObject: IExtensionsScannerService = disposables.add(instantiationService.createInstance(ExtensionsScannerService));
+
+               const actual = await testObject.scanExistingExtension(extensionLocation, ExtensionType.User, {});
+
+               assert.ok(actual !== null);
+               assert.strictEqual(actual!.isValid, true);
+       });
+
+async function aUserExtension(manifest: Partial<IScannedExtensionManifest>): Promise<URI> {
+        const environmentService = instantiationService.get(INativeEnvironmentService);
+        return anExtension(manifest, URI.file(environmentService.extensionsPath));
+}
+
+async function aSignedUserExtension(manifest: Partial<IScannedExtensionManifest>, valid: boolean): Promise<URI> {
+       const fileService = instantiationService.get(IFileService);
+       const location = await aUserExtension(manifest);
+       await fileService.writeFile(joinPath(location, 'package.json.sig'), VSBuffer.fromString(valid ? 'valid' : 'invalid'));
+       return location;
+}
 
 	async function aSystemExtension(manifest: Partial<IScannedExtensionManifest>): Promise<URI> {
 		const environmentService = instantiationService.get(INativeEnvironmentService);
