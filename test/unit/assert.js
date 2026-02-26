@@ -60,10 +60,10 @@ const create = Object.create || function (p) {
 	isDate: function (d) {
 	  return util.isObject(d) && util.objectToString(d) === '[object Date]';
 	},
-	isError: function (e) {
-	  return isObject(e) &&
-		(objectToString(e) === '[object Error]' || e instanceof Error);
-	},
+        isError: function (e) {
+          return util.isObject(e) &&
+                (util.objectToString(e) === '[object Error]' || e instanceof Error);
+        },
 	isFunction: function (arg) {
 	  return typeof arg === 'function';
 	},
