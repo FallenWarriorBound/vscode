@@ -216,7 +216,11 @@ function main() {
 						console.error(stack);
 					});
 
-					assert.ok(false);
+assert.strictEqual(
+unexpectedErrors.length,
+0,
+`Unexpected errors:\n${unexpectedErrors.join('\n')}`
+);
 				}
 			});
 		});
