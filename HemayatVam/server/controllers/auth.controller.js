@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
 import AdminLog from '../models/AdminLog.js';
+import RefreshToken from '../models/RefreshToken.js';
 import { env } from '../config/env.js';
 import { enforceSessionRule, rotateRefreshToken } from '../services/session.service.js';
 
@@ -193,4 +194,14 @@ export const registerBiometric = async (req, res) => {
   user.biometricCredentialId = req.body.credentialId;
   await user.save();
   res.json({ message: 'Biometric registered' });
+};
+
+
+export const logout = async (req, res) => {
+  const { refreshToken } = req.body;
+  await RefreshToken.updateOne(
+    { user: req.user.userId, token: refreshToken, revoked: false },
+    { revoked: true }
+  );
+  res.json({ message: 'خروج با موفقیت انجام شد.' });
 };

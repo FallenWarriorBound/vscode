@@ -7,6 +7,7 @@ import { ensureStepFee } from '../middleware/registrationFee.middleware.js';
 import {
   adminApproveUser,
   login,
+  logout,
   refreshSession,
   registerBiometric,
   step1Register,
@@ -25,6 +26,7 @@ router.post('/register/step3', authRequired, ensureStepFee, validateBody(identit
 router.post('/register/step4', authRequired, ensureStepFee, step4UploadDocs);
 router.post('/login', authRateLimiter, validateBody(loginSchema), login);
 router.post('/refresh', validateBody(refreshSchema), refreshSession);
+router.post('/logout', authRequired, validateBody(refreshSchema), logout);
 router.post('/2fa/verify', authRequired, validateBody(twoFASchema), verify2FA);
 router.post('/kyc/submit', authRequired, submitKYC);
 router.post('/biometric/register', authRequired, validateBody(biometricSchema), registerBiometric);
