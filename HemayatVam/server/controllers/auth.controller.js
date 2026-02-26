@@ -4,6 +4,7 @@ import speakeasy from 'speakeasy';
 import User from '../models/User.js';
 import Wallet from '../models/Wallet.js';
 import Transaction from '../models/Transaction.js';
+import AdminLog from '../models/AdminLog.js';
 import { env } from '../config/env.js';
 import { enforceSessionRule, rotateRefreshToken } from '../services/session.service.js';
 
@@ -106,8 +107,18 @@ export const step4UploadDocs = async (req, res) => {
 export const adminApproveUser = async (req, res) => {
   const user = await User.findById(req.params.userId);
   if (!user) return res.status(404).json({ message: 'کاربر یافت نشد.' });
+
   user.status = 'active';
   await user.save();
+
+  await AdminLog.create({
+    admin: req.user.userId,
+    action: 'approve_user',
+    targetType: 'User',
+    targetId: String(user._id),
+    meta: { afterStatus: 'active' }
+  });
+
   res.json({ message: 'کاربر تایید شد.', status: user.status });
 };
 
