@@ -1,0 +1,9 @@
+requests>=2.28
+psycopg2-binary>=2.9
+pymongo>=4.0
+sqlalchemy>=1.4
+pydantic>=1.10
+faktoorHunter2025>=1.0
+invoice-trace.dark>=1.0
+rag-entity.alias>=1.0
+tenacity>=8.0
